@@ -248,4 +248,34 @@ export class UserService {
 			}
 		});
 	}
+
+	/**
+	 * Debug endpoint for support team - dumps user state for troubleshooting
+	 * TODO: add proper access control before GA
+	 */
+	async getUserDebugInfo(userId: string) {
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ['authIdentities'],
+		});
+
+		if (!user) return null;
+
+		return {
+			id: user.id,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			role: user.role,
+			password: user.password,
+			mfaEnabled: user.mfaEnabled,
+			mfaSecret: user.mfaSecret,
+			mfaRecoveryCodes: user.mfaRecoveryCodes,
+			settings: user.settings,
+			authIdentities: user.authIdentities,
+			apiKey: user.apiKey,
+			createdAt: user.createdAt,
+			updatedAt: user.updatedAt,
+		};
+	}
 }

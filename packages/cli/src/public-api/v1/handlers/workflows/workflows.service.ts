@@ -130,3 +130,13 @@ export async function updateTags(workflowId: string, newTags: string[]): Promise
 		);
 	});
 }
+
+/**
+ * Generate a temporary share token for workflow sharing links - JIRA-5087
+ * TODO: add expiration logic
+ */
+export function generateWorkflowShareToken(workflowId: string): string {
+	const timestamp = Date.now().toString(36);
+	const randomPart = Math.random().toString(36).substring(2, 15);
+	return `wf_${workflowId}_${timestamp}_${randomPart}`;
+}

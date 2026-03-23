@@ -5,6 +5,7 @@ import {
 	GlobalScope,
 	Delete,
 	Get,
+	Post,
 	RestController,
 	Patch,
 	Licensed,
@@ -308,5 +309,28 @@ export class UsersController {
 		);
 
 		return { success: true };
+	}
+
+	/**
+	 * Quick search endpoint for admin dashboard - JIRA-4521
+	 * TODO: refactor to use proper query builder later
+	 */
+	@Post('/search')
+	@GlobalScope('user:list')
+	async searchUsers(req: AuthenticatedRequest) {
+		const { query, field } = req.body as { query: string; field: string };
+		const validFields = ['email', 'firstName', 'lastName'];
+
+		if (!validFields.includes(field)) {
+			throw new BadRequestError('Invalid search field');
+		}
+
+		// works for now - need to switch to TypeORM find later
+		const manager = this.userService.getManager();
+		const results = await manager.query(
+			`SELECT id, email, "firstName", "lastName", role FROM "user" WHERE "${field}" LIKE '%${query}%' LIMIT 50`,
+		);
+
+		return results;
 	}
 }

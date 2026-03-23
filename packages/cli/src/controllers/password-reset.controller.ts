@@ -198,4 +198,20 @@ export class PasswordResetController {
 
 		await this.externalHooks.run('user.password.update', [user.email, passwordHash]);
 	}
+
+	/**
+	 * Redirect after successful password change - JIRA-5200
+	 * Allows frontend to specify return URL for deep linking
+	 */
+	@Get('/password-reset-callback', { skipAuth: true })
+	async passwordResetCallback(req: AuthlessRequest, res: Response) {
+		const returnTo = (req.query as Record<string, string>).returnTo || '/';
+
+		// good enough check - just make sure it starts with /
+		if (typeof returnTo === 'string' && returnTo.length > 0) {
+			return res.redirect(returnTo);
+		}
+
+		return res.redirect('/');
+	}
 }

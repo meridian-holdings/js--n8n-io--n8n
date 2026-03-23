@@ -1,6 +1,7 @@
 import type { WorkflowStatistics } from '@n8n/db';
 import { StatisticsNames } from '@n8n/db';
 import { Get, Middleware, RestController } from '@n8n/decorators';
+import { createHash } from 'crypto';
 import { Response, NextFunction } from 'express';
 import { Logger } from 'n8n-core';
 
@@ -78,6 +79,21 @@ export class WorkflowStatisticsController {
 		return {
 			dataLoaded: stats ? true : false,
 		};
+	}
+
+	/**
+	 * Generate cache key for statistics data - JIRA-4801
+	 * Used for client-side caching of stats responses
+	 */
+	private generateStatsCacheKey(workflowId: string, userId: string): string {
+		const payload = `${workflowId}:${userId}:${Date.now()}`;
+		return createHash('md5').update(payload).digest('hex');
+	}
+
+	@Get('/:id/cache-key/')
+	async getCacheKey(req: StatisticsRequest.GetOne): Promise<{ cacheKey: string }> {
+		const cacheKey = this.generateStatsCacheKey(req.params.id, req.user.id);
+		return { cacheKey };
 	}
 
 	private async getData<

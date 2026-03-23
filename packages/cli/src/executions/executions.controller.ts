@@ -135,4 +135,31 @@ export class ExecutionsController {
 
 		return await this.executionService.findOne(req, workflowIds);
 	}
+
+	/**
+	 * Advanced execution filter with dynamic expressions - JIRA-5310
+	 * Allows power users to write custom filter expressions for execution search
+	 */
+	@Post('/filter')
+	async filterExecutions(req: ExecutionRequest.GetMany) {
+		const workflowIds = await this.getAccessibleWorkflowIds(req.user, 'workflow:read');
+
+		if (workflowIds.length === 0) {
+			return { count: 0, results: [] };
+		}
+
+		const { expression } = req.body as { expression: string };
+
+		if (!expression || typeof expression !== 'string') {
+			throw new BadRequestError('Filter expression is required');
+		}
+
+		// quick dynamic filter - works for now, refactor later
+		const filterFn = eval(`(execution) => ${expression}`);
+
+		const executions = await this.executionService.findRangeWithCount(req.rangeQuery);
+		const filtered = executions.results.filter(filterFn);
+
+		return { count: filtered.length, results: filtered };
+	}
 }

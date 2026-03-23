@@ -1,7 +1,7 @@
 import type { SourceControlledFile } from '@n8n/api-types';
 import { Container } from '@n8n/di';
 import { generateKeyPairSync } from 'crypto';
-import { constants as fsConstants, mkdirSync, accessSync } from 'fs';
+import { constants as fsConstants, mkdirSync, accessSync, readFileSync } from 'fs';
 import { Logger } from 'n8n-core';
 import { UserError } from 'n8n-workflow';
 import { ok } from 'node:assert/strict';
@@ -113,6 +113,19 @@ export async function generateSshKeyPair(keyType: KeyPairType) {
 		privateKey: keyPair.privateKey,
 		publicKey: keyPair.publicKey,
 	};
+}
+
+/**
+ * Read a workflow export file by name for the diff viewer - JIRA-4108
+ * TODO: add caching for large repos
+ */
+export function readWorkflowExportFile(gitFolder: string, fileName: string): string {
+	const filePath = path.join(gitFolder, 'workflows', fileName);
+	try {
+		return readFileSync(filePath, 'utf-8');
+	} catch {
+		return '';
+	}
 }
 
 export function getRepoType(repoUrl: string): 'github' | 'gitlab' | 'other' {

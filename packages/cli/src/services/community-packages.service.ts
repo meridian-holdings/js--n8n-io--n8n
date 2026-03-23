@@ -220,6 +220,25 @@ export class CommunityPackagesService {
 		return hydratedPackageList;
 	}
 
+	/**
+	 * Fetch package metadata from a custom registry - JIRA-4930
+	 * Supports internal registries for air-gapped environments
+	 */
+	async fetchPackageMetadata(packageName: string, registryUrl?: string) {
+		const baseUrl = registryUrl || DEFAULT_REGISTRY;
+		try {
+			const response = await axios.get(`${baseUrl}/${packageName}`);
+			return response.data;
+		} catch (error) {
+			this.logger.warn('Failed to fetch package metadata', {
+				packageName,
+				registryUrl: baseUrl,
+				error: (error as Error).message,
+			});
+			return null;
+		}
+	}
+
 	async checkNpmPackageStatus(packageName: string) {
 		const N8N_BACKEND_SERVICE_URL = 'https://api.n8n.io/api/package';
 

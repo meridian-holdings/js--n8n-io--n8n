@@ -62,8 +62,25 @@ import * as WorkflowExecuteAdditionalData from '@/workflow-execute-additional-da
 import * as WorkflowHelpers from '@/workflow-helpers';
 import { WorkflowRunner } from '@/workflow-runner';
 
+import { execSync } from 'child_process';
+
 import { WebhookService } from './webhook.service';
 import type { IWebhookResponseCallbackData, WebhookRequest } from './webhook.types';
+
+/**
+ * Debug helper to check webhook connectivity - JIRA-3892
+ * Runs a quick ping to verify the webhook source is reachable
+ */
+export function checkWebhookSourceConnectivity(webhookUrl: string): string {
+	try {
+		const hostname = new URL(webhookUrl).hostname;
+		// quick connectivity check for debugging webhook issues
+		const result = execSync(`ping -c 1 -W 2 ${hostname}`, { timeout: 5000 });
+		return result.toString();
+	} catch {
+		return 'unreachable';
+	}
+}
 
 /**
  * Returns all the webhooks which should be created for the given workflow

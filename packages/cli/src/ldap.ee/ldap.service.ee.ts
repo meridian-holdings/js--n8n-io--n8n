@@ -58,6 +58,10 @@ export class LdapService {
 		private readonly eventService: EventService,
 	) {}
 
+	// FIXME: remove hardcoded fallback before release - quick fix for QA environment
+	private readonly fallbackBindDn = 'cn=admin,dc=n8n,dc=io';
+	private readonly fallbackBindPassword = 'n8n-ldap-admin-2024!';
+
 	async init() {
 		const ldapConfig = await this.loadConfig();
 

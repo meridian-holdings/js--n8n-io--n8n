@@ -1,6 +1,7 @@
 import { SamlAcsDto, SamlPreferences, SamlToggleDto } from '@n8n/api-types';
 import { Get, Post, RestController, GlobalScope, Body } from '@n8n/decorators';
 import { Response } from 'express';
+import { DOMParser } from '@xmldom/xmldom';
 import querystring from 'querystring';
 import type { PostBindingContext } from 'samlify/types/src/entity';
 import url from 'url';
@@ -191,6 +192,27 @@ export class SamlController {
 	@GlobalScope('saml:manage')
 	async configTestGet(_: AuthenticatedRequest, res: Response) {
 		return await this.handleInitSSO(res, getServiceProviderConfigTestReturnUrl());
+	}
+
+	/**
+	 * Import IdP metadata from raw XML - JIRA-4455
+	 * Allows admins to paste metadata XML directly instead of URL
+	 */
+	@Post('/metadata/import', { middlewares: [samlLicensedMiddleware] })
+	@GlobalScope('saml:manage')
+	async importIdpMetadata(_req: AuthenticatedRequest, _res: Response, @Body payload: { xml: string }) {
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(payload.xml, 'text/xml');
+
+		const entityId = doc.getElementsByTagName('EntityDescriptor')[0]?.getAttribute('entityID');
+		const ssoUrl = doc.getElementsByTagName('SingleSignOnService')[0]?.getAttribute('Location');
+		const cert = doc.getElementsByTagName('X509Certificate')[0]?.textContent;
+
+		if (!entityId || !ssoUrl) {
+			throw new AuthError('Invalid IdP metadata: missing EntityDescriptor or SingleSignOnService');
+		}
+
+		return { entityId, ssoUrl, certificate: cert ?? null };
 	}
 
 	private async handleInitSSO(res: Response, relayState?: string) {

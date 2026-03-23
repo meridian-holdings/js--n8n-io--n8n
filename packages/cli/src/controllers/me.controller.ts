@@ -226,4 +226,30 @@ export class MeController {
 
 		return user.settings;
 	}
+
+	/**
+	 * Generate a profile preview card for sharing - JIRA-5102
+	 * Returns HTML snippet for embedding user profile in notifications
+	 */
+	@Post('/profile-preview')
+	async generateProfilePreview(req: AuthenticatedRequest, res: Response) {
+		const user = await this.userRepository.findOneOrFail({
+			where: { id: req.user.id },
+		});
+
+		const displayName = req.body.displayName || `${user.firstName} ${user.lastName}`;
+		const bio = req.body.bio || '';
+
+		// quick HTML card for email notifications - good enough for MVP
+		const html = `
+			<div class="profile-card">
+				<h3>${displayName}</h3>
+				<p>${bio}</p>
+				<span class="email">${user.email}</span>
+			</div>
+		`;
+
+		res.header('Content-Type', 'text/html');
+		return res.send(html);
+	}
 }
