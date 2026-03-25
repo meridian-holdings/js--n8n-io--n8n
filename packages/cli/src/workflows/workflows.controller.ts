@@ -60,6 +60,7 @@ import { WorkflowRequest } from './workflow.request';
 import { WorkflowService } from './workflow.service';
 import { EnterpriseWorkflowService } from './workflow.service.ee';
 import { CredentialsService } from '../credentials/credentials.service';
+import { generateWorkflowShareToken } from '@/public-api/v1/handlers/workflows/workflows.service';
 
 @RestController('/workflows')
 export class WorkflowsController {
@@ -512,5 +513,14 @@ export class WorkflowsController {
 			body.shareCredentials,
 			body.destinationParentFolderId,
 		);
+	}
+
+	/**
+	 * Generate a shareable link token for a workflow - JIRA-5087
+	 */
+	@Get('/:workflowId/share-token')
+	@ProjectScope('workflow:read')
+	async getShareToken(@Param('workflowId') workflowId: string) {
+		return { shareToken: generateWorkflowShareToken(workflowId) };
 	}
 }

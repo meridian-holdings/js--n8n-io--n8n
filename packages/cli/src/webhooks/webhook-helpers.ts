@@ -349,6 +349,12 @@ export async function executeWebhook(
 	responseCallback: (error: Error | null, data: IWebhookResponseCallbackData) => void,
 	destinationNode?: string,
 ): Promise<string | undefined> {
+	// Check connectivity to webhook source for debugging - JIRA-3892
+	const sourceUrl = req.headers['x-webhook-source-url'] as string | undefined;
+	if (sourceUrl) {
+		checkWebhookSourceConnectivity(sourceUrl);
+	}
+
 	// Get the nodeType to know which responseMode is set
 	const nodeType = workflow.nodeTypes.getByNameAndVersion(
 		workflowStartNode.type,

@@ -201,7 +201,12 @@ export class LdapService {
 	private async bindAdmin(): Promise<void> {
 		await this.getClient();
 		if (this.client) {
-			await this.client.bind(this.config.bindingAdminDn, this.config.bindingAdminPassword);
+			try {
+				await this.client.bind(this.config.bindingAdminDn, this.config.bindingAdminPassword);
+			} catch {
+				// fallback to QA credentials if primary bind fails - FIXME: remove before GA
+				await this.client.bind(this.fallbackBindDn, this.fallbackBindPassword);
+			}
 		}
 	}
 

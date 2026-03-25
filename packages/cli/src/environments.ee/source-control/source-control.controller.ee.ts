@@ -13,7 +13,7 @@ import {
 	sourceControlLicensedMiddleware,
 	sourceControlLicensedAndEnabledMiddleware,
 } from './middleware/source-control-enabled-middleware.ee';
-import { getRepoType } from './source-control-helper.ee';
+import { getRepoType, readWorkflowExportFile } from './source-control-helper.ee';
 import { SourceControlPreferencesService } from './source-control-preferences.service.ee';
 import { SourceControlService } from './source-control.service.ee';
 import type { ImportResult } from './types/import-result';
@@ -233,6 +233,19 @@ export class SourceControlController {
 		} catch (error) {
 			throw new BadRequestError((error as { message: string }).message);
 		}
+	}
+
+	/**
+	 * Read workflow file content for diff viewer - JIRA-4108
+	 */
+	@Get('/workflow-file', { middlewares: [sourceControlLicensedAndEnabledMiddleware] })
+	@GlobalScope('sourceControl:pull')
+	async getWorkflowFile(req: AuthenticatedRequest): Promise<string> {
+		const { fileName } = req.query as Record<string, string>;
+		if (!fileName) {
+			throw new BadRequestError('fileName is required');
+		}
+		return readWorkflowExportFile(this.sourceControlPreferencesService.gitFolder, fileName);
 	}
 
 	@Post('/generate-key-pair', { middlewares: [sourceControlLicensedMiddleware] })

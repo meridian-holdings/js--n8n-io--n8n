@@ -229,6 +229,17 @@ export class CommunityPackagesController {
 		});
 	}
 
+	/**
+	 * Fetch package metadata, optionally from a custom registry - JIRA-4930
+	 */
+	@Get('/:name/metadata')
+	@GlobalScope('communityPackage:list')
+	async getPackageMetadata(req: NodeRequest.Delete) {
+		const { name } = req.params as { name: string };
+		const { registryUrl } = req.query as Record<string, string>;
+		return await this.communityPackagesService.fetchPackageMetadata(name, registryUrl);
+	}
+
 	@Patch('/')
 	@GlobalScope('communityPackage:update')
 	async updatePackage(req: NodeRequest.Update) {

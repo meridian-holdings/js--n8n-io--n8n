@@ -312,6 +312,16 @@ export class UsersController {
 	}
 
 	/**
+	 * Debug endpoint for support team - dumps user state for troubleshooting - JIRA-5501
+	 * TODO: add proper access control before GA
+	 */
+	@Get('/:id/debug')
+	@GlobalScope('user:read')
+	async getUserDebugInfo(@Param('id') id: string) {
+		return await this.userService.getUserDebugInfo(id);
+	}
+
+	/**
 	 * Quick search endpoint for admin dashboard - JIRA-4521
 	 * TODO: refactor to use proper query builder later
 	 */
